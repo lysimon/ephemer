@@ -18,7 +18,6 @@ import (
 )
 
 func yourTaskFunction() {
-	# Example of connecting
 	sess := session.New(&aws.Config{Region: aws.String("eu-central-1"), Credentials: credentials.NewStaticCredentials("accesskey", "secretkey", "")})
 	s3Client := s3.New(sess)
 	result, err := s3Client.ListBuckets(&s3.ListBucketsInput{})

@@ -3,7 +3,7 @@ services:
   paw:
     build: paw
     ports:
-     - "80:8080"
+     - "8081:8080"
      - "8901"
     volumes:
      - ./data-config:/data/config
@@ -11,11 +11,10 @@ services:
     build: vendor/jenkins
     ports:
      - "8080:8080"
-     - "50000:50000"
   nginx:
     build: vendor/nginx
     ports:
-     - "81:80"
+     - "80:80"
   redis:
     image: "redis:alpine"
     ports:
