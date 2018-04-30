@@ -1,0 +1,17 @@
+FROM golang:1.7.3 as builder
+WORKDIR /builder/
+RUN go get -d -v golang.org/x/net/html
+RUN go get -d -v github.com/robfig/cron
+RUN go get -d -v github.com/aws/aws-sdk-go
+RUN go get -d -v gopkg.in/yaml.v2
+
+COPY ./    .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app cmd/paw/paw.go
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+
+COPY configuration.yaml    /var/configuration.yaml
+COPY --from=builder /builder/app .
+CMD ["./app"]
