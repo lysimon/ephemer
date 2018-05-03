@@ -1,7 +1,9 @@
 version: '3'
 services:
   paw:
-    build: paw
+    build:
+      context: .
+      dockerfile: Dockerfile-paw
     ports:
      - "8081:8080"
      - "8901"

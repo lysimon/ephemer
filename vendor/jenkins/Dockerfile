@@ -6,8 +6,8 @@ MAINTAINER laurent.simon
 COPY config.xml /var/jenkins_home/config.xml
 
 # Install jenkins plugin
-RUN /usr/local/bin/install-plugins.sh git
-RUN /usr/local/bin/install-plugins.sh s3
+RUN /usr/local/bin/install-plugins.sh git &&\
+    /usr/local/bin/install-plugins.sh s3
 
 
 # Disable first time initialization
