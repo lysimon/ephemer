@@ -14,7 +14,7 @@ import (
 	"github.com/robfig/cron"
 	//"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"../../internal/paw"
-	"../../internal/pkg/config"
+	"../../pkg/config"
 )
 
 func yourTaskFunction() {
