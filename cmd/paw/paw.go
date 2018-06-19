@@ -15,6 +15,7 @@ func main() {
 	c := cron.New()
 
 	c.AddFunc("5 * * * * *", func() { paw.Cron() })
+	paw.Cron()
 	c.Start()
 	defer c.Stop()
 

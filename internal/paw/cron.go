@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"../../pkg/config"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 func Cron() {
@@ -29,10 +29,17 @@ func validate_buckets() {
 			for _, region := range provider.Regions {
 
 				// Creating credentials to call aws
-				var sess = config.GlobalConfig.Get_aws_session(provider.Name, region.Name)
+				sess := config.GlobalConfig.Get_aws_session(provider.Name, region.Name)
 				// Need to retrieve the correct bucket name for region
-				var uploader := s3manager.NewUploader(sess)
-
+				svc := s3.New(sess)
+				// TODO change api call in case too many bucket
+				buckets, err := svc.ListBuckets(nil)
+				if err != nil {
+					log.Fatalf("Fail to list bucket: %v", err)
+				}
+				log.Printf("Found bucket list: %v", buckets)
+				config.GlobalConfig.Get_aws_account_id(provider.Name)
+				// Fail hard if buckets cannot be describe
 			}
 		}
 

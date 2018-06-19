@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sts"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -43,28 +44,46 @@ func (c Config) Get_redis_host() int16 {
 // Get a session for the aws account defined by this name and region
 // TODO add cache here for 30 min
 func (c Config) Get_aws_session(name string, region string) *session.Session {
+	sess, err := session.NewSession(&aws.Config{
+		Region:      aws.String(region),
+		Credentials: GlobalConfig.Get_aws_credentials(name),
+	})
+	// Fail hard on err
+	if err != nil {
+		log.Fatalf("Fail to create aws session: %v", err)
+	}
+
+	return sess
+}
+
+func (c Config) Get_aws_credentials(name string) *credentials.Credentials {
 	for _, provider := range GlobalConfig.Providers {
 		// element is the element from someSlice for where we are
 		print(provider.Name)
 		if provider.Name == name {
-
-			// For each region, we create the s3 bucket where cloudformation will be
-			for _, region := range provider.Regions {
-
-				// Creating credentials to call aws
-				sess, err := session.NewSession(&aws.Config{
-					Region:      aws.String(region.Name),
-					Credentials: credentials.NewStaticCredentials(provider.Credentials.Access_key, provider.Credentials.Secret_key, "ephemerio"),
-				})
-				// Fail hard on err
-				if err != nil {
-					log.Fatalf("Fail to create aws session: %v", err)
-				}
-				return sess
-			}
+			// Only static credentials managed for now
+			return credentials.NewStaticCredentials(provider.Credentials.Access_key, provider.Credentials.Secret_key, "")
 		}
 	}
 	return nil
+}
+
+// Retrieve the account id, can be used for creating unique bucket
+func (c Config) Get_aws_account_id(name string) string {
+	// using default region us-east-1
+	sess := GlobalConfig.Get_aws_session(name, "us-east-1")
+	svc := sts.New(sess)
+	req, resp := svc.GetCallerIdentityRequest(nil)
+	err := req.Send()
+	if err != nil {
+		log.Fatalf("Fail to retrieve identity: %v", err)
+	}
+	log.Printf("Got successful account answer: %v", resp)
+
+	log.Printf("Got successful account: %v", *resp.Account)
+	log.Printf("Got successful arn: %v", *resp.Arn)
+
+	return *resp.Account
 }
 
 var GlobalConfig = GetConfiguration("/data/config/configuration.yaml")
