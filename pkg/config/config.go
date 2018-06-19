@@ -4,47 +4,87 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	yaml "gopkg.in/yaml.v2"
 )
 
 type Config struct {
-	providers []struct {
-		provider    string
-		name        string
-		credentials struct {
-			access_key string
-			secret_key string
+	Providers []struct {
+		Provider    string
+		Name        string
+		Credentials struct {
+			Access_key string
+			Secret_key string
+		}
+		Regions []struct {
+			Name        string
+			Bucket_name string
 		}
 	}
 
-	redis struct {
-		host string
-		port int16
+	Redis struct {
+		Host string
+		Port int16
 	}
 
-	paw struct {
-		host string
-		port int16
+	Paw struct {
+		Host string
+		Port int16
 	}
 }
 
-func Init(file_path string) {
+func (c Config) Get_redis_host() int16 {
+	return c.Redis.Port
+}
 
-	log.Print("Initializing configuration")
-	conf := make(map[interface{}]interface{})
+// Get a session for the aws account defined by this name and region
+// TODO add cache here for 30 min
+func (c Config) Get_aws_session(name string, region string) *session.Session {
+	for _, provider := range GlobalConfig.Providers {
+		// element is the element from someSlice for where we are
+		print(provider.Name)
+		if provider.Name == name {
 
-	reader, _ := os.Open(file_path)
+			// For each region, we create the s3 bucket where cloudformation will be
+			for _, region := range provider.Regions {
 
-	buff, _ := ioutil.ReadAll(reader)
-	s := string(buff)
-	fmt.Print(s)
-
-	err := yaml.Unmarshal(buff, &conf)
-	if err != nil {
-		log.Fatalf("error: %v", err)
+				// Creating credentials to call aws
+				sess, err := session.NewSession(&aws.Config{
+					Region:      aws.String(region.Name),
+					Credentials: credentials.NewStaticCredentials(provider.Credentials.Access_key, provider.Credentials.Secret_key, "ephemerio"),
+				})
+				// Fail hard on err
+				if err != nil {
+					log.Fatalf("Fail to create aws session: %v", err)
+				}
+				return sess
+			}
+		}
 	}
+	return nil
+}
 
-	fmt.Printf("--- m:\n%v\n\n", conf)
+var GlobalConfig = GetConfiguration("/data/config/configuration.yaml")
+
+func GetConfiguration(file_path string) Config {
+
+	var c Config
+
+	yamlFile, err := ioutil.ReadFile(file_path)
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+	}
+	err = yaml.Unmarshal(yamlFile, &c)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+	}
+	fmt.Printf("--- m:\n%v\n\n", string(yamlFile))
+
+	fmt.Printf("Got final configuration")
+	fmt.Printf("--- m:\n%v\n\n", c)
+	fmt.Printf("End final configuration")
+	return c
 }
