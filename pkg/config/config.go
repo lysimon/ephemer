@@ -21,8 +21,9 @@ type Config struct {
 			Secret_key string
 		}
 		Regions []struct {
-			Name        string
-			Bucket_name string
+			Name          string
+			Bucket_name   string
+			Retention_day int64
 		}
 	}
 

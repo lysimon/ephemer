@@ -47,7 +47,7 @@ func validate_buckets() {
 				//log.Printf("Found bucket list: %v", buckets)
 				// Find out the bucket name for cloudformation
 				bucket := parser.Get_parsed_value(region.Bucket_name, config.GlobalConfig.Get_aws_account_id(provider.Name), region.Name, "")
-				log.Printf("We should verify that this bucket: %v exist in region %v", bucket, region.Name)
+				log.Printf("We should verify that the bucket: %v exist in region %v", bucket, region.Name)
 
 				ctx := context.Background()
 				bucket_region, err := s3manager.GetBucketRegion(ctx, sess, bucket, region.Name)
@@ -66,6 +66,7 @@ func validate_buckets() {
 						log.Fatalf("Unknow error happened while trying to list bucket %v: %v", bucket, err)
 					}
 				} else {
+
 					if bucket_region == region.Name {
 						fmt.Printf("Bucket %s is in correct %s region\n", bucket, bucket_region)
 					} else {
@@ -73,6 +74,42 @@ func validate_buckets() {
 					}
 				}
 				// Verifying retention policy of bucket
+				_, err = svc.GetBucketLifecycleConfiguration(&s3.GetBucketLifecycleConfigurationInput{
+					Bucket: aws.String(bucket),
+				})
+
+				if err != nil {
+					log.Printf("code: %s", err.(awserr.Error).Code())
+					if err.(awserr.Error).Code() == "NoSuchLifecycleConfiguration" {
+						status := "Enabled"
+						id := "ephemerio"
+						prefix := "*"
+						retention_day := region.Retention_day
+						lifecycleexpiration := s3.LifecycleExpiration{Days: &retention_day}
+
+						LifecycleRuleFilter := s3.LifecycleRuleFilter{
+							Prefix: &prefix,
+						}
+						LifecycleRule := s3.LifecycleRule{
+							Status:     &status,
+							Expiration: &lifecycleexpiration,
+							ID:         &id,
+							Filter:     &LifecycleRuleFilter,
+						}
+
+						_, err = svc.PutBucketLifecycleConfiguration(&s3.PutBucketLifecycleConfigurationInput{
+							Bucket:                 aws.String(bucket),
+							LifecycleConfiguration: &s3.BucketLifecycleConfiguration{Rules: []*s3.LifecycleRule{&LifecycleRule}},
+						})
+						if err != nil {
+							log.Fatalf("Unable to create lifecycle policy %q, %v", bucket, err.(awserr.Error))
+
+						}
+
+					} else {
+						log.Fatalf("Unable to get bucket lifecycle policy %q, %v", bucket, err.(awserr.Error))
+					}
+				}
 				// Setting retention policy for the created bucket
 
 				// Fail hard if buckets cannot be describe
