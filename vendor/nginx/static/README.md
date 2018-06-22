@@ -1,36 +1,75 @@
-# [Start Bootstrap](http://startbootstrap.com/) - [SB Admin 2](http://startbootstrap.com/template-overviews/sb-admin-2/)
-[![CDNJS](https://img.shields.io/cdnjs/v/startbootstrap-sb-admin-2.svg)](https://cdnjs.com/libraries/startbootstrap-sb-admin-2)
+AdminBSB - Material Design
+=======================
+[![npm version](https://img.shields.io/npm/v/adminbsb-materialdesign.svg)](https://www.npmjs.com/package/adminbsb-materialdesign)
+![Bower version](https://img.shields.io/bower/v/adminbsb-materialdesign.svg)
 
-[SB Admin 2](http://startbootstrap.com/template-overviews/sb-admin-2/) is an open source, admin dashboard template for [Bootstrap](http://getbootstrap.com/) created by [Start Bootstrap](http://startbootstrap.com/).
+**AdminBSB - Material Design is a fully responsive and free admin template.** It was developed with [Bootstrap 3.x Framework](http://getbootstrap.com) and [Google Material Design](https://material.google.com) of powers.
 
-## Getting Started
+It's really easy to customize and usage. You can use for from 320px to large resolution pixels of new generation screens and mobile devices. (**Fully Responsive Material Design**)
 
-To begin using this template, choose one of the following options to get started:
-* [Download the latest release on Start Bootstrap](http://startbootstrap.com/template-overviews/sb-admin-2/)
-* Clone the repo: `git clone https://github.com/BlackrockDigital/startbootstrap-sb-admin-2.git`
-* Fork the repo
+Looking for Premium Templates?
+----------------
+**If you need more features please visit portfolio of mine which page link is [https://themeforest.net/user/gurayyarar/portfolio](http://bit.ly/2oPFpmQ)**
 
-## Using the Source Files
+Demo
+----------------
+You can check the website preview with **[this link](https://gurayyarar.github.io/AdminBSBMaterialDesign/)**  
 
-After cloning the repo take a look at the `gulpfile.js` and check out the tasks available:
-* `gulp` The default task will compile the LESS and JS into the `dist` directory and minify the output, and it will copy all vendor libraries from `bower_components` into the `vendor` directory
-* `gulp dev` The dev task will serve up a local version of the template and will watch the LESS, JS, and HTML files for changes and reload the browser windo automatically
+![AdminBSB - Free Admin Template With Material Design](https://raw.githubusercontent.com/gurayyarar/AdminBSBMaterialDesign/master/images/screenshot.png)
 
-To update dependencies, run `bower update` and then run `gulp copy` to copy the updated dependencies into the `vendor` directory
+Installation
+----------------
+You can choose one from multiple ways for installation.
 
-## Bugs and Issues
+**GitHub**
+- Fork the repository ([here is the guide](https://help.github.com/articles/fork-a-repo/)).
+- Clone to your machine
+```
+git clone https://github.com/gurayyarar/AdminBSBMaterialDesign.git
+```
 
-Have a bug or an issue with this template? [Open a new issue](https://github.com/BlackrockDigital/startbootstrap-sb-admin-2/issues) here on GitHub or leave a comment on the [template overview page at Start Bootstrap](http://startbootstrap.com/template-overviews/sb-admin-2/).
+**npm**
+```
+npm install adminbsb-materialdesign
+```
 
-## Creator
+**bower**
+```
+bower install adminbsb-materialdesign
+```
 
-Start Bootstrap was created by and is maintained by **[David Miller](http://davidmiller.io/)**, Owner of [Blackrock Digital](http://blackrockdigital.io/).
+Documentation
+----------
+Visit the **[documentation](https://gurayyarar.github.io/AdminBSBMaterialDesign/documentation/)**
 
-* https://twitter.com/davidmillerskt
-* https://github.com/davidtmiller
+Browser Support
+----------
+- IE 10 +
+- Microsoft Edge (Latest)
+- Mozilla Firefox (Latest)
+- Google Chrome (Latest)
+- Opera (Latest)
+- Safari (Latest)
 
-Start Bootstrap is based on the [Bootstrap](http://getbootstrap.com/) framework created by [Mark Otto](https://twitter.com/mdo) and [Jacob Thorton](https://twitter.com/fat).
+Change Logs
+----------
+You can display all release notes with **[this link](https://gurayyarar.github.io/AdminBSBMaterialDesign/pages/changelogs.html)**
 
-## Copyright and License
 
-Copyright 2013-2018 Blackrock Digital LLC. Code released under the [MIT](https://github.com/BlackrockDigital/startbootstrap-sb-admin-2/blob/gh-pages/LICENSE) license.
+FAQ
+===
+**Can I use this template for personal or commercial websites/web projects?**  
+Sure, you can use both of personal and commercial websites/web projects.
+
+**Is the attribution link required?**  
+No, not required. (Though very much appreciated)
+
+License
+----------
+**AdminBSB - Material Design** is an open source project that is licensed under the [MIT license](http://opensource.org/licenses/MIT).
+
+Donations
+----------
+Donations are **greatly appreciated!**
+
+**[BUY ME A COFFEE](http://bit.ly/2yEjtx5)**
