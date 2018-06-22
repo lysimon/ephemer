@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -36,6 +37,14 @@ type Config struct {
 		Host string
 		Port int16
 	}
+}
+
+func (c Config) To_json() []byte {
+	js, err := json.Marshal(c)
+	if err != nil {
+		log.Fatalf("Unable to retrieve configuration: %v", err)
+	}
+	return js
 }
 
 func (c Config) Get_redis_host() int16 {
