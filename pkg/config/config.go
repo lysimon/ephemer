@@ -46,7 +46,7 @@ func (c Config) Get_redis_host() int16 {
 func (c Config) Get_aws_session(name string, region string) *session.Session {
 	sess, err := session.NewSession(&aws.Config{
 		Region:      aws.String(region),
-		Credentials: GlobalConfig.Get_aws_credentials(name),
+		Credentials: c.Get_aws_credentials(name),
 	})
 	// Fail hard on err
 	if err != nil {
@@ -57,7 +57,7 @@ func (c Config) Get_aws_session(name string, region string) *session.Session {
 }
 
 func (c Config) Get_aws_credentials(name string) *credentials.Credentials {
-	for _, provider := range GlobalConfig.Providers {
+	for _, provider := range c.Providers {
 		// element is the element from someSlice for where we are
 		print(provider.Name)
 		if provider.Name == name {
@@ -71,7 +71,7 @@ func (c Config) Get_aws_credentials(name string) *credentials.Credentials {
 // Retrieve the account id, can be used for creating unique bucket
 func (c Config) Get_aws_account_id(name string) string {
 	// using default region us-east-1
-	sess := GlobalConfig.Get_aws_session(name, "us-east-1")
+	sess := c.Get_aws_session(name, "us-east-1")
 	svc := sts.New(sess)
 	req, resp := svc.GetCallerIdentityRequest(nil)
 	err := req.Send()
@@ -88,6 +88,7 @@ func (c Config) Get_aws_account_id(name string) string {
 
 var GlobalConfig = GetConfiguration("/data/config/configuration.yaml")
 
+// Initialize the configuration
 func GetConfiguration(file_path string) Config {
 
 	var c Config
