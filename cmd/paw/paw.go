@@ -12,13 +12,16 @@ import (
 )
 
 func main() {
-	c := cron.New()
+	// Initialization, creating Create_buckets
+	paw.Create_buckets()
 
+	// Start clean up cron job
+	c := cron.New()
 	c.AddFunc("5 * * * * *", func() { paw.Cron() })
-	paw.Cron()
 	c.Start()
 	defer c.Stop()
 
+	// Start web server
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Print("error")
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
