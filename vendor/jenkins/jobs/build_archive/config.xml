@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>Default build package. All information should have been passed to jenkins.</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>git_project</name>
+          <description>Git repository to build from</description>
+          <defaultValue>https://github.com/drewdresser/hello-go-serverless-webapp</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>git_branch</name>
+          <description>Branch or commit id to pull</description>
+          <defaultValue>master</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.TextParameterDefinition>
+          <name>build_script</name>
+          <description>Build script that will be executed.</description>
+          <defaultValue>echo &quot;this is my first archive&quot; &gt; ${archive_folder}/archiveone
+echo &quot;this is my second archive&quot; &gt; ${archive_folder}/archivetwo</defaultValue>
+        </hudson.model.TextParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>archive_folder</name>
+          <description>All files in this folder will be send to aws and will be usable by your components.
+We need to delete this folder in the beginning in case same jenkins worker is used again.
+${BUILD_ID} could have been used as well</description>
+          <defaultValue>ephemerio-build</defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@3.9.1">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>${git_project}</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>${git_branch}</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>set -ex
+# Starting building script
+# Removing archive repository if it exists
+rm -Rf ${archive_folder}
+# creating archive repository
+mkdir ${archive_folder}
+# Executing user script
+cat &gt; build.sh &lt;&lt;EOL
+#!/bin/bash
+set -ex
+${build_script}
+EOL
+chmod +x build.sh
+./build.sh
+echo &quot;toto&quot; &gt; ${archive_folder}/tata
+# Finish build successfully</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.ArtifactArchiver>
+      <artifacts>${archive_folder}/**/*</artifacts>
+      <allowEmptyArchive>false</allowEmptyArchive>
+      <onlyIfSuccessful>false</onlyIfSuccessful>
+      <fingerprint>false</fingerprint>
+      <defaultExcludes>true</defaultExcludes>
+      <caseSensitive>true</caseSensitive>
+    </hudson.tasks.ArtifactArchiver>
+  </publishers>
+  <buildWrappers/>
+</project>

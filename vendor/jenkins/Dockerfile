@@ -10,15 +10,12 @@ RUN apt-get update \
 
 # Copying default configuration to disable jenkins security
 COPY config.xml /var/jenkins_home/config.xml
+# Copying our default jobs to jenkins
+COPY jobs /var/jenkins_home/jobs
 
 # Install jenkins pipeline plugin
-RUN /usr/local/bin/install-plugins.sh workflow-aggregator
+RUN /usr/local/bin/install-plugins.sh git
 
 
 # Disable first time initialization
 ENV JAVA_OPTS -Dhudson.Main.development=true -Djenkins.install.runSetupWizard=false
-
-
-# Install VI for easier maintenance
-#RUN apt-get update
-#RUN apt-get install -y vim sudo

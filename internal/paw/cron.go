@@ -12,7 +12,6 @@ func Cron() {
 	log.Print("paw.Cron end")
 	//log.Print(config.GlobalConfig)
 	//log.Fatal("Failing hard")
-
 }
 
 // Loop over all aws account + region to create the s3 bucket for cloudformation
