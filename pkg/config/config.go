@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -96,7 +97,7 @@ func (c Config) Get_aws_account_id(name string) string {
 	return *resp.Account
 }
 
-var GlobalConfig = GetConfiguration("/data/config/configuration.yaml")
+var GlobalConfig = GetConfiguration(os.Getenv("CONFIGURATION_FILE_PATH"))
 
 // Initialize the configuration
 func GetConfiguration(file_path string) Config {

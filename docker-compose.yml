@@ -8,6 +8,8 @@ services:
      - "8081:8080"
     volumes:
      - ./data-config:/data/config
+    environment:
+     - CONFIGURATION_FILE_PATH=/data/config/configuration.yaml
   whisker:
     build:
       context: .
@@ -16,6 +18,8 @@ services:
       - "8082:8080"
     volumes:
       - ./data-config:/data/config
+    environment:
+     - CONFIGURATION_FILE_PATH=/data/config/configuration.yaml
   jenkins:
     build: vendor/jenkins
     ports:
