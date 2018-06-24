@@ -18,9 +18,19 @@ func check_git_repo(w http.ResponseWriter, r *http.Request) {
 	w.Write(bytes)
 }
 
-func Can_access_git_rep(git_url string) bool {
+func Is_git_rep(git_url string) bool {
 	//args := []string{"ls-remote", git_url, ">", "/dev/null"}
 	_, err := exec.Command(get_git_path(), "ls-remote", git_url, ">", "/dev/null").Output()
+	if err != nil {
+		return false
+	} else {
+		return true
+	}
+}
+
+func Is_valid_git_branch(git_url string, git_branch string) bool {
+	//args := []string{"ls-remote", git_url, ">", "/dev/null"}
+	_, err := exec.Command(get_git_path(), "ls-remote", "--exit-code", git_url, git_branch, ">", "/dev/null").Output()
 	if err != nil {
 		return false
 	} else {
