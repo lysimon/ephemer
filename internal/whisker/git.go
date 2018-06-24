@@ -2,6 +2,7 @@ package whisker
 
 // Get basic configuration to show to the user
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"log"
@@ -119,7 +120,7 @@ func Get_file(git_url string, branch string, filename string) []byte {
 		log.Printf("Unable to fetch latest  #%v ", git_url)
 		return nil
 	}
-	return output
+	return bytes.TrimSpace(output)
 }
 
 // Retrieve md5 hashes to have better structure

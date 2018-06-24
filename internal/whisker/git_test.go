@@ -2,7 +2,6 @@ package whisker
 
 import (
 	"log"
-	"strings"
 	"testing"
 )
 
@@ -64,7 +63,7 @@ func TestGitGetFile(t *testing.T) {
 	if result == nil {
 		t.Errorf("Expected content")
 	}
-	str_result := strings.TrimSpace(string(result))
+	str_result := string(result)
 
 	if str_result != "samplefile" {
 		t.Errorf("Wrong content, got %v instead of %v", str_result, "samplefile")
