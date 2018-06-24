@@ -48,7 +48,7 @@ func check_git_repo(w http.ResponseWriter, r *http.Request) {
 
 func Is_git_rep(git_url string) bool {
 	//args := []string{"ls-remote", git_url, ">", "/dev/null"}
-	_, err := exec.Command(get_git_path(), "ls-remote", git_url, ">", "/dev/null").Output()
+	_, err := exec.Command("git", "ls-remote", git_url, ">", "/dev/null").Output()
 	if err != nil {
 		return false
 	} else {
@@ -58,7 +58,7 @@ func Is_git_rep(git_url string) bool {
 
 func Is_valid_git_branch(git_url string, git_branch string) bool {
 	//args := []string{"ls-remote", git_url, ">", "/dev/null"}
-	_, err := exec.Command(get_git_path(), "ls-remote", "--exit-code", git_url, git_branch, ">", "/dev/null").Output()
+	_, err := exec.Command("git", "ls-remote", "--exit-code", git_url, git_branch, ">", "/dev/null").Output()
 	if err != nil {
 		return false
 	} else {
@@ -67,29 +67,26 @@ func Is_valid_git_branch(git_url string, git_branch string) bool {
 }
 
 // Clone a remote git repo locally.
-// Needed to access remote git file without cloning the full repo
+// Needed as we want to access one remote file
 func Clone_git_repo(git_url string) bool {
-	cmd := exec.Command(get_git_path(), "clone", git_url, getMD5Hash(git_url))
-	log.Printf("Found md5 of %v : %v ", git_url, getMD5Hash(git_url))
+	// Only clone it if it does not exist locally
+	if _, err := os.Stat(GitFolder + "/" + getMD5Hash(git_url)); os.IsNotExist(err) {
 
-	// Use temporary
-	cmd.Dir = GitFolder
-	_, err := cmd.Output()
-	if err != nil {
-		log.Printf("Unable to clone git repository  #%v ", git_url)
-		return false
+		cmd := exec.Command("git", "clone", git_url, getMD5Hash(git_url))
+		log.Printf("Found md5 of %v : %v ", git_url, getMD5Hash(git_url))
+
+		// Use temporary
+		cmd.Dir = GitFolder
+		_, err := cmd.Output()
+		if err != nil {
+			log.Printf("Unable to clone git repository  #%v ", git_url)
+			return false
+		}
 	}
 	return true
 }
 
-func get_git_path() string {
-	git_path, lookErr := exec.LookPath("git")
-	if lookErr != nil {
-		panic(lookErr)
-	}
-	return git_path
-}
-
+// Retrieve md5 hashes to have better structure
 func getMD5Hash(text string) string {
 	hasher := md5.New()
 	hasher.Write([]byte(text))
