@@ -104,11 +104,15 @@ func TestGetGitProjectValidUrl(t *testing.T) {
 }
 
 func TestGetGitProjectInvalidUrl(t *testing.T) {
-	_, err := GetGitProject("https://randomfalse/whteveruselessthing.git")
+	_, err := GetGitProject("https://github.com/lysimon/hello-go-serverless-webapp")
 	if err == nil {
 		t.Errorf("Expected error with wrong input")
 	}
-	_, err = GetGitProject("  fsd . ds")
+	_, err = GetGitProject("aHR0cHM6Ly9yYW5kb21mYWxzZS93aHRldmVydXNlbGVzc3RoaW5nLmdpdA==")
+	if err == nil {
+		t.Errorf("Expected error with wrong input")
+	}
+	_, err = GetGitProject("")
 	if err == nil {
 		t.Errorf("Expected error with wrong input")
 	}
