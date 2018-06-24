@@ -4,7 +4,7 @@ package whisker
 import (
 	"net/http"
 
-	"../../pkg/config"
+	"github.com/lysimon/felicette/pkg/config"
 )
 
 func Configuration() {

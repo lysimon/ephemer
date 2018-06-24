@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 	//"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"../../internal/whisker"
-	"../../pkg/status"
+	"github.com/lysimon/felicette/internal/whisker"
+	"github.com/lysimon/felicette/pkg/status"
 )
 
 func main() {
