@@ -70,7 +70,7 @@ func Is_valid_git_branch(git_url string, git_branch string) bool {
 // Needed as we want to access one remote file
 func Clone_git_repo(git_url string) bool {
 	// Only clone it if it does not exist locally
-	if _, err := os.Stat(GitFolder + "/" + getMD5Hash(git_url)); os.IsNotExist(err) {
+	if _, err := os.Stat(getLocalGitPath(git_url)); os.IsNotExist(err) {
 
 		cmd := exec.Command("git", "clone", git_url, getMD5Hash(git_url))
 		log.Printf("Found md5 of %v : %v ", git_url, getMD5Hash(git_url))
@@ -83,7 +83,43 @@ func Clone_git_repo(git_url string) bool {
 			return false
 		}
 	}
+	// Get the latest version
+
 	return true
+}
+
+func Fetch_latest(git_url string) bool {
+	// Be sure that the latest version is there
+	if !Clone_git_repo(git_url) {
+		return false
+	}
+	cmd := exec.Command("git", "fetch", "--all", "--prune")
+
+	// Use temporary
+	cmd.Dir = getLocalGitPath(git_url)
+	_, err := cmd.Output()
+	if err != nil {
+		log.Printf("Unable to fetch latest  #%v ", git_url)
+		return false
+	}
+	return true
+
+}
+
+// Retrieve a file from a git_url + branch + filename, nil if not possible
+func Get_file(git_url string, branch string, filename string) []byte {
+	Fetch_latest(git_url)
+	// Get file for this branch
+	cmd := exec.Command("git", "show", branch+":"+filename)
+
+	// Use temporary
+	cmd.Dir = getLocalGitPath(git_url)
+	output, err := cmd.Output()
+	if err != nil {
+		log.Printf("Unable to fetch latest  #%v ", git_url)
+		return nil
+	}
+	return output
 }
 
 // Retrieve md5 hashes to have better structure
@@ -91,4 +127,8 @@ func getMD5Hash(text string) string {
 	hasher := md5.New()
 	hasher.Write([]byte(text))
 	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func getLocalGitPath(git_url string) string {
+	return GitFolder + "/" + getMD5Hash(git_url)
 }
