@@ -38,6 +38,16 @@ func Is_valid_git_branch(git_url string, git_branch string) bool {
 	}
 }
 
+func List_git_branch(git_url string, prefix string) bool {
+	//args := []string{"ls-remote", git_url, ">", "/dev/null"}
+	_, err := exec.Command(get_git_path(), "ls-remote", "--exit-code", git_url, prefix, ">", "/dev/null").Output()
+	if err != nil {
+		return false
+	} else {
+		return true
+	}
+}
+
 func get_git_path() string {
 	git_path, lookErr := exec.LookPath("git")
 	if lookErr != nil {
