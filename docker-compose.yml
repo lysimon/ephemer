@@ -20,6 +20,7 @@ services:
       - ./data-config:/data/config
     environment:
      - CONFIGURATION_FILE_PATH=/data/config/configuration.yaml
+     - CONFIGURATION_WHISKER_GIT_FOLDER=/tmp/felicette
   jenkins:
     build: vendor/jenkins
     ports:

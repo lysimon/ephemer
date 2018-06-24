@@ -1,10 +1,15 @@
 package whisker
 
 import (
+	"log"
+	"os"
 	"testing"
 )
 
 func TestGit(t *testing.T) {
+	log.Print("TestGit start")
+	os.Setenv("CONFIGURATION_WHISKER_GIT_FOLDER", "/tmp/felicette-test")
+
 	result := Is_git_rep("https://github.com/serverless/serverless")
 	if !result {
 		t.Errorf("expected true, got false")
@@ -29,4 +34,17 @@ func TestGit(t *testing.T) {
 	if result {
 		t.Errorf("expected false, got true")
 	}
+	log.Print("TestGit finish")
+
+}
+
+func TestGitFile(t *testing.T) {
+	log.Print("TestGitFile start")
+
+	result := Clone_git_repo("https://github.com/serverless/serverless")
+	if !result {
+		t.Errorf("expected false, got true")
+	}
+	log.Print("TestGitFile finish")
+
 }
