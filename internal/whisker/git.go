@@ -2,9 +2,13 @@ package whisker
 
 // Get basic configuration to show to the user
 import (
+	"bufio"
 	"bytes"
 	"crypto/md5"
+	"encoding/base64"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +16,74 @@ import (
 	"strconv"
 	"strings"
 )
+
+// Git project structure returned by the api
+type GitProject struct {
+	Base64Url string
+	Url       string
+	Branches  []Branch
+}
+
+type Branch struct {
+	Name     string
+	CommitId string
+}
+
+func (gitProject GitProject) GetBranch(name string) (Branch, error) {
+	for _, branch := range gitProject.Branches {
+		if branch.Name == name {
+			return branch, nil
+		}
+	}
+	return Branch{}, errors.New("Unable to find branch")
+}
+
+func GetGitProject(base64url string) (GitProject, error) {
+	// Decoding base64 url
+	urlbytes, err := base64.StdEncoding.DecodeString(base64url)
+	if err != nil {
+		return GitProject{}, err
+	}
+	url := string(urlbytes)
+
+	// Listing remote branches
+	outputBytes, err := exec.Command("git", "ls-remote", url).Output()
+	if err != nil {
+		return GitProject{}, err
+	}
+	// Triming space to parse the output correctly
+	output := string(bytes.TrimSpace(outputBytes))
+
+	// Reading line by line to create branches
+	branches := []Branch{}
+	scanner := bufio.NewScanner(strings.NewReader(output))
+	for scanner.Scan() {
+		line := scanner.Text()
+		split := strings.Split(line, "\t")
+
+		commitId := split[0]
+		ref := split[1]
+		fmt.Println(ref)
+
+		// If ref starts with refs/heads/ it is a branch
+		if strings.HasPrefix(ref, "refs/heads/") || strings.HasPrefix(ref, "refs/tags/") {
+			ref = strings.Replace(ref, "refs/heads/", "origin/", 1)
+			ref = strings.Replace(ref, "refs/tags/", "tags/", 1)
+			branch := Branch{
+				CommitId: commitId,
+				Name:     ref,
+			}
+			fmt.Println(ref)
+			branches = append(branches, branch)
+		}
+	}
+
+	return GitProject{
+		Url:       url,
+		Base64Url: base64url,
+		Branches:  branches,
+	}, nil
+}
 
 var GitFolder = get_git_folder()
 
@@ -38,6 +110,8 @@ func get_git_folder() string {
 
 func Git() {
 	http.HandleFunc("/git", check_git_repo)
+	http.HandleFunc("/git/branch", check_git_branch)
+
 }
 
 // json structure returning the current configuration
@@ -47,6 +121,19 @@ func check_git_repo(w http.ResponseWriter, r *http.Request) {
 	git_url := r.FormValue("git_url")
 	log.Printf("Got git_url %v", git_url)
 	str := strconv.FormatBool(Is_git_rep(git_url))
+	bytes := []byte(str)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(bytes)
+}
+
+func check_git_branch(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Got check_git_repo")
+
+	git_url := r.FormValue("git_url")
+	git_branch := r.FormValue("git_branch")
+
+	log.Printf("Got git_url %v", git_url)
+	str := strconv.FormatBool(Is_valid_git_branch(git_url, git_branch))
 	bytes := []byte(str)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(bytes)
@@ -72,8 +159,6 @@ func Is_valid_git_branch(git_url string, git_branch string) bool {
 	}
 }
 
-// Clone a remote git repo locally.
-// Needed as we want to access one remote file
 func Clone_git_repo(git_url string) bool {
 	// Only clone it if it does not exist locally
 	if _, err := os.Stat(getLocalGitPath(git_url)); os.IsNotExist(err) {
