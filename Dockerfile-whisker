@@ -1,5 +1,6 @@
 FROM golang:1.7.3 as builder
 WORKDIR /builder/
+
 RUN go get -d -v golang.org/x/net/html &&\
     go get -d -v github.com/robfig/cron &&\
     go get -d -v github.com/aws/aws-sdk-go &&\
@@ -12,6 +13,8 @@ COPY ./internal/whisker    /go/src/github.com/lysimon/felicette/internal/whisker
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app /go/src/github.com/lysimon/felicette/cmd/whisker/whisker.go
 
 FROM alpine:latest
+RUN apk update && apk upgrade && \
+    apk add --no-cache bash git openssh
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 

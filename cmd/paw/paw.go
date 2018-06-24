@@ -23,6 +23,7 @@ func main() {
 	defer c.Stop()
 
 	status.Status()
+
 	// Start web server
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Print("error")

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -41,7 +42,11 @@ func Git() {
 
 // json structure returning the current configuration
 func check_git_repo(w http.ResponseWriter, r *http.Request) {
-	str := "ok"
+	log.Printf("Got check_git_repo")
+
+	git_url := r.FormValue("git_url")
+	log.Printf("Got git_url %v", git_url)
+	str := strconv.FormatBool(Is_git_rep(git_url))
 	bytes := []byte(str)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(bytes)

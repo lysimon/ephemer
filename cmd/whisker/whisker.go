@@ -22,6 +22,8 @@ func main() {
 	// Loading status
 	status.Status()
 
+	whisker.Git()
+
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
 }
