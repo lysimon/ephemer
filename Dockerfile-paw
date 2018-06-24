@@ -5,11 +5,11 @@ RUN go get -d -v golang.org/x/net/html &&\
     go get -d -v github.com/aws/aws-sdk-go &&\
     go get -d -v gopkg.in/yaml.v2
 
-COPY ./pkg    ./pkg
-COPY ./cmd/paw    ./cmd/paw
-COPY ./internal/paw    ./internal/paw
+COPY ./pkg    /go/src/github.com/lysimon/felicette/pkg
+COPY ./cmd/paw    /go/src/github.com/lysimon/felicette/cmd/paw
+COPY ./internal/paw    /go/src/github.com/lysimon/felicette/internal/paw
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app cmd/paw/paw.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app /go/src/github.com/lysimon/felicette/cmd/paw/paw.go
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
