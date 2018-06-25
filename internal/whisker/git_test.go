@@ -1,9 +1,13 @@
 package whisker
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/google/jsonapi"
+	"github.com/gorilla/mux"
 )
 
 /*
@@ -102,5 +106,39 @@ func TestGetGitProjectInvalidUrl(t *testing.T) {
 	_, err = GetGitProject("  fsd . ds")
 	if err == (jsonapi.ErrorObject{}) {
 		t.Errorf("Expected error with wrong input")
+	}
+}
+
+func TestGetGitProjectFromRequestSuccess(t *testing.T) {
+	rr := httptest.NewRecorder()
+	path := fmt.Sprintf("/git/%s", "aHR0cHM6Ly9naXRodWIuY29tL2x5c2ltb24vaGVsbG8tZ28tc2VydmVybGVzcy13ZWJhcHA=")
+	req, err := http.NewRequest("GET", path, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/git/{base64url}", GetGitProjectFromRequest)
+	router.ServeHTTP(rr, req)
+
+	if rr.Result().StatusCode != 200 {
+		t.Errorf("Expected 200")
+	}
+}
+
+func TestGetGitProjectFromRequestError(t *testing.T) {
+	rr := httptest.NewRecorder()
+	path := fmt.Sprintf("/git/%s", "aHR0cHM6Ly9naXRodWIuY29tL2x5c2ltb24vaGVsbG8tZ")
+	req, err := http.NewRequest("GET", path, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/git/{base64url}", GetGitProjectFromRequest)
+	router.ServeHTTP(rr, req)
+
+	if rr.Result().StatusCode != 400 {
+		t.Errorf("Expected 400")
 	}
 }

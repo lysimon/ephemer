@@ -4,11 +4,8 @@ package whisker
 import (
 	"bufio"
 	"bytes"
-	"crypto/md5"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -33,6 +30,29 @@ type Branch struct {
 	CommitId string `json:"commit_id"`
 }
 
+var GitFolder = get_git_folder()
+
+// create git folder used for applications, and remove everything inside
+func get_git_folder() string {
+	folder := os.Getenv("CONFIGURATION_WHISKER_GIT_FOLDER")
+	if folder == "" {
+		// Using default
+		folder = "/tmp/felicette"
+	}
+	if !strings.HasPrefix(folder, "/tmp") {
+		log.Fatalf("Git folder define by env variable CONFIGURATION_WHISKER_GIT_FOLDER should start with /tmp, got: %v", folder)
+	}
+	_, err := exec.Command("rm", "-Rf", folder).Output()
+	if err != nil {
+		log.Fatalf("Unable to delete folder %v: %v", folder, err)
+	}
+	_, err = exec.Command("mkdir", folder).Output()
+	if err != nil {
+		log.Fatalf("Unable to create folder %v: %v", folder, err)
+	}
+	return folder
+}
+
 // json structure returning the current configuration
 func GetGitProjectFromRequest(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
@@ -42,7 +62,9 @@ func GetGitProjectFromRequest(w http.ResponseWriter, r *http.Request) {
 	if err != (jsonapi.ErrorObject{}) {
 		// return json error with status code
 		js, _ := json.Marshal(err)
-		http.Error(w, string(js), http.StatusInternalServerError)
+
+		statusCode, _ := strconv.Atoi(err.Status)
+		http.Error(w, string(js), statusCode)
 	} else {
 		js, _ := json.Marshal(project)
 		w.Write(js)
@@ -83,7 +105,6 @@ func GetGitProject(base64url string) (GitProject, jsonapi.ErrorObject) {
 
 		commitId := split[0]
 		ref := split[1]
-		fmt.Println(ref)
 
 		// If ref starts with refs/heads/ it is a branch
 		if strings.HasPrefix(ref, "refs/heads/") || strings.HasPrefix(ref, "refs/tags/") {
@@ -93,7 +114,6 @@ func GetGitProject(base64url string) (GitProject, jsonapi.ErrorObject) {
 				CommitId: commitId,
 				Name:     ref,
 			}
-			fmt.Println(ref)
 			branches = append(branches, branch)
 		}
 	}
@@ -105,123 +125,106 @@ func GetGitProject(base64url string) (GitProject, jsonapi.ErrorObject) {
 	}, jsonapi.ErrorObject{}
 }
 
-var GitFolder = get_git_folder()
-
-// create git folder used for applications, and remove everything inside
-func get_git_folder() string {
-	folder := os.Getenv("CONFIGURATION_WHISKER_GIT_FOLDER")
-	if folder == "" {
-		// Using default
-		folder = "/tmp/felicette"
+func GetBranch(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	baseUrl := params["base64url"]
+	project, err := GetGitProject(baseUrl)
+	if err != (jsonapi.ErrorObject{}) {
+		// return json error with status code
+		js, _ := json.Marshal(err)
+		http.Error(w, string(js), http.StatusInternalServerError)
+		return
 	}
-	if !strings.HasPrefix(folder, "/tmp") {
-		log.Fatalf("Git folder define by env variable CONFIGURATION_WHISKER_GIT_FOLDER should start with /tmp, got: %v", folder)
-	}
-	_, err := exec.Command("rm", "-Rf", folder).Output()
-	if err != nil {
-		log.Fatalf("Unable to delete folder %v: %v", folder, err)
-	}
-	_, err = exec.Command("mkdir", folder).Output()
-	if err != nil {
-		log.Fatalf("Unable to create folder %v: %v", folder, err)
-	}
-	return folder
-}
-
-func Check_git_branch(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Got check_git_repo")
-
-	git_url := r.FormValue("git_url")
-	git_branch := r.FormValue("git_branch")
-
-	log.Printf("Got git_url %v", git_url)
-	str := strconv.FormatBool(Is_valid_git_branch(git_url, git_branch))
-	bytes := []byte(str)
+	// retrieve file from the commitId
+	commitId := params["commitId"]
+	GetFile(project, commitId, "felicette.yml")
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(bytes)
-}
-
-func Is_git_rep(git_url string) bool {
-	//args := []string{"ls-remote", git_url, ">", "/dev/null"}
-	_, err := exec.Command("git", "ls-remote", git_url, ">", "/dev/null").Output()
-	if err != nil {
-		return false
+	if err != (jsonapi.ErrorObject{}) {
+		// return json error with status code
+		js, _ := json.Marshal(err)
+		http.Error(w, string(js), http.StatusInternalServerError)
 	} else {
-		return true
+		// retrieve felicette.yml file
+		js, _ := json.Marshal(project)
+		w.Write(js)
 	}
+	return
 }
 
-func Is_valid_git_branch(git_url string, git_branch string) bool {
-	//args := []string{"ls-remote", git_url, ">", "/dev/null"}
-	_, err := exec.Command("git", "ls-remote", "--exit-code", git_url, git_branch, ">", "/dev/null").Output()
-	if err != nil {
-		return false
-	} else {
-		return true
+func getBranch(base64url string, commitId string) (Branch, jsonapi.ErrorObject) {
+	project, err := GetGitProject(base64url)
+	if err != (jsonapi.ErrorObject{}) {
+		return Branch{}, err
 	}
+
+	err = cloneGitRepository(project)
+	if err != (jsonapi.ErrorObject{}) {
+		return Branch{}, err
+	}
+
+	return Branch{}, err
 }
 
-func Clone_git_repo(git_url string) bool {
-	// Only clone it if it does not exist locally
-	if _, err := os.Stat(getLocalGitPath(git_url)); os.IsNotExist(err) {
+func cloneGitRepository(gitProject GitProject) jsonapi.ErrorObject {
+	// If directory does not exists
+	if _, err := os.Stat(getLocalGitPath(gitProject.Base64Url)); os.IsNotExist(err) {
 
-		cmd := exec.Command("git", "clone", git_url, getMD5Hash(git_url))
-		log.Printf("Found md5 of %v : %v ", git_url, getMD5Hash(git_url))
-
-		// Use temporary
+		//Clone it locally
+		cmd := exec.Command("git", "clone", gitProject.Url, gitProject.Base64Url)
 		cmd.Dir = GitFolder
 		_, err := cmd.Output()
 		if err != nil {
-			log.Printf("Unable to clone git repository  #%v ", git_url)
-			return false
+			return jsonapi.ErrorObject{
+				Title:  "Unable to clone git repo",
+				Detail: "Unable to find the git repository provided.",
+				Status: "400",
+			}
 		}
 	}
 	// Get the latest version
 
-	return true
+	return jsonapi.ErrorObject{}
 }
 
-func Fetch_latest(git_url string) bool {
+func fetchLatest(gitProject GitProject) jsonapi.ErrorObject {
 	// Be sure that the latest version is there
-	if !Clone_git_repo(git_url) {
-		return false
+	err := cloneGitRepository(gitProject)
+	if err != (jsonapi.ErrorObject{}) {
+		return err
 	}
 	cmd := exec.Command("git", "fetch", "--all", "--prune")
-
 	// Use temporary
-	cmd.Dir = getLocalGitPath(git_url)
-	_, err := cmd.Output()
-	if err != nil {
-		log.Printf("Unable to fetch latest  #%v ", git_url)
-		return false
+	cmd.Dir = getLocalGitPath(gitProject.Base64Url)
+	_, erro := cmd.Output()
+	if erro != nil {
+		return jsonapi.ErrorObject{
+			Title:  "Unable tofetch latest commit",
+			Detail: "git fetch --all --prune failed.",
+			Status: "400",
+		}
 	}
-	return true
-
+	return jsonapi.ErrorObject{}
 }
 
 // Retrieve a file from a git_url + branch + filename, nil if not possible
-func Get_file(git_url string, branch string, filename string) []byte {
-	Fetch_latest(git_url)
+func GetFile(gitProject GitProject, commitId string, filename string) ([]byte, jsonapi.ErrorObject) {
+	fetchLatest(gitProject)
 	// Get file for this branch
-	cmd := exec.Command("git", "show", branch+":"+filename)
+	cmd := exec.Command("git", "show", commitId+":"+filename)
 
 	// Use temporary
-	cmd.Dir = getLocalGitPath(git_url)
+	cmd.Dir = getLocalGitPath(gitProject.Base64Url)
 	output, err := cmd.Output()
 	if err != nil {
-		log.Printf("Unable to fetch latest  #%v ", git_url)
-		return nil
+		return []byte{}, jsonapi.ErrorObject{
+			Title:  "Unable tofetch latest commit",
+			Detail: "git fetch --all --prune failed, please, check felicette-whisker configuration",
+			Status: "400",
+		}
 	}
-	return bytes.TrimSpace(output)
+	return bytes.TrimSpace(output), jsonapi.ErrorObject{}
 }
 
-// Retrieve md5 hashes to have better structure
-func getMD5Hash(text string) string {
-	hasher := md5.New()
-	hasher.Write([]byte(text))
-	return hex.EncodeToString(hasher.Sum(nil))
-}
-
-func getLocalGitPath(git_url string) string {
-	return GitFolder + "/" + getMD5Hash(git_url)
+func getLocalGitPath(folderName string) string {
+	return GitFolder + "/" + folderName
 }

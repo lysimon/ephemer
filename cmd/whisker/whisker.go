@@ -13,7 +13,7 @@ func main() {
 	// Start web server
 	router := mux.NewRouter()
 	router.HandleFunc("/git/{base64url}", whisker.GetGitProjectFromRequest)
-	router.HandleFunc("/git/{base64url}/branch/{branch}", whisker.Check_git_branch)
+	router.HandleFunc("/git/{base64url}/branch/{commitId}", whisker.GetBranch)
 	router.HandleFunc("/status", status.Status)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
