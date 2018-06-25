@@ -36,7 +36,7 @@ type Branch struct {
 // json structure returning the current configuration
 func GetGitProjectFromRequest(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	baseUrl := params["id"]
+	baseUrl := params["base64url"]
 	project, err := GetGitProject(baseUrl)
 	w.Header().Set("Content-Type", "application/json")
 	if err != (jsonapi.ErrorObject{}) {
