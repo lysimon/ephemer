@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"html"
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/robfig/cron"
 	//"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/lysimon/felicette/internal/paw"
@@ -22,14 +21,9 @@ func main() {
 	c.Start()
 	defer c.Stop()
 
-	status.Status()
+	router := mux.NewRouter()
+	router.HandleFunc("/status", status.Status)
 
-	// Start web server
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Print("error")
-		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-	})
-
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", router))
 
 }

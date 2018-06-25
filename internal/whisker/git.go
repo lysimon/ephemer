@@ -7,7 +7,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,41 +15,62 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
+
+	"github.com/google/jsonapi"
 )
 
 // Git project structure returned by the api
 type GitProject struct {
-	Base64Url string
-	Url       string
-	Branches  []Branch
+	Base64Url string   `json:"base64url"`
+	Url       string   `json:"url"`
+	Branches  []Branch `json:"branches"`
 }
 
 type Branch struct {
-	Name     string
-	CommitId string
+	Name     string `json:"name"`
+	CommitId string `json:"commit_id"`
 }
 
-func (gitProject GitProject) GetBranch(name string) (Branch, error) {
-	for _, branch := range gitProject.Branches {
-		if branch.Name == name {
-			return branch, nil
-		}
+// json structure returning the current configuration
+func GetGitProjectFromRequest(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	baseUrl := params["id"]
+	_, err := GetGitProject(baseUrl)
+	if err != (jsonapi.ErrorObject{}) {
+		// return json error with status code
+		js, _ := json.Marshal(err)
+		http.Error(w, string(js), http.StatusInternalServerError)
+		return
+	} else {
+
 	}
-	return Branch{}, errors.New("Unable to find branch")
+	bytes := []byte("toto")
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(bytes)
 }
 
-func GetGitProject(base64url string) (GitProject, error) {
+func GetGitProject(base64url string) (GitProject, jsonapi.ErrorObject) {
 	// Decoding base64 url
 	urlbytes, err := base64.StdEncoding.DecodeString(base64url)
 	if err != nil {
-		return GitProject{}, err
+		return GitProject{}, jsonapi.ErrorObject{
+			Title:  "Git repository not found",
+			Detail: "Unable to find the git repository provided.",
+			Status: "400",
+		}
 	}
 	url := string(urlbytes)
 
 	// Listing remote branches
 	outputBytes, err := exec.Command("git", "ls-remote", url).Output()
 	if err != nil {
-		return GitProject{}, err
+		return GitProject{}, jsonapi.ErrorObject{
+			Title:  "Validation Error",
+			Detail: "Given request body was invalid.",
+			Status: "400",
+		}
 	}
 	// Triming space to parse the output correctly
 	output := string(bytes.TrimSpace(outputBytes))
@@ -82,7 +103,7 @@ func GetGitProject(base64url string) (GitProject, error) {
 		Url:       url,
 		Base64Url: base64url,
 		Branches:  branches,
-	}, nil
+	}, jsonapi.ErrorObject{}
 }
 
 var GitFolder = get_git_folder()
@@ -108,25 +129,7 @@ func get_git_folder() string {
 	return folder
 }
 
-func Git() {
-	http.HandleFunc("/git", check_git_repo)
-	http.HandleFunc("/git/branch", check_git_branch)
-
-}
-
-// json structure returning the current configuration
-func check_git_repo(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Got check_git_repo")
-
-	git_url := r.FormValue("git_url")
-	log.Printf("Got git_url %v", git_url)
-	str := strconv.FormatBool(Is_git_rep(git_url))
-	bytes := []byte(str)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(bytes)
-}
-
-func check_git_branch(w http.ResponseWriter, r *http.Request) {
+func Check_git_branch(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Got check_git_repo")
 
 	git_url := r.FormValue("git_url")

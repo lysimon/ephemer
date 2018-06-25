@@ -4,6 +4,8 @@ WORKDIR /builder/
 RUN go get -d -v golang.org/x/net/html &&\
     go get -d -v github.com/robfig/cron &&\
     go get -d -v github.com/aws/aws-sdk-go &&\
+    go get -d -v github.com/google/jsonapi &&\
+    go get github.com/gorilla/mux &&\
     go get -d -v gopkg.in/yaml.v2
 
 COPY ./pkg    /go/src/github.com/lysimon/felicette/pkg

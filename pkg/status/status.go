@@ -10,11 +10,7 @@ type health struct {
 	Status_code string
 }
 
-func Status() {
-	http.HandleFunc("/status", status)
-}
-
-func status(w http.ResponseWriter, r *http.Request) {
+func Status(w http.ResponseWriter, r *http.Request) {
 	profile := health{"healthy", "200"}
 
 	js, err := json.Marshal(profile)

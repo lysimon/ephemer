@@ -2,6 +2,8 @@ package whisker
 
 import (
 	"testing"
+
+	"github.com/google/jsonapi"
 )
 
 /*
@@ -72,7 +74,7 @@ func TestGitGetFile(t *testing.T) {
 
 func TestGetGitProjectValidUrl(t *testing.T) {
 	result, err := GetGitProject("aHR0cHM6Ly9naXRodWIuY29tL2x5c2ltb24vaGVsbG8tZ28tc2VydmVybGVzcy13ZWJhcHA=")
-	if err != nil {
+	if err != (jsonapi.ErrorObject{}) {
 		t.Errorf("Not expected error during ls-remote operation")
 	}
 	if result.Base64Url != "aHR0cHM6Ly9naXRodWIuY29tL2x5c2ltb24vaGVsbG8tZ28tc2VydmVybGVzcy13ZWJhcHA=" {
@@ -82,42 +84,23 @@ func TestGetGitProjectValidUrl(t *testing.T) {
 		t.Errorf("Url should have been sent correctly")
 	}
 
-	branch, err := result.GetBranch("origin/master")
-	if err != nil {
-		t.Errorf("Branch should have been found")
-	}
-	if branch.Name != "origin/master" {
-		t.Errorf("Should have been the same name")
-	}
-	branch, err = result.GetBranch("tags/stable")
-	if err != nil {
-		t.Errorf("Branch should have been found")
-	}
-	if branch.Name != "tags/stable" {
-		t.Errorf("Tag stable not found")
-	}
-	// Check that branches and tag are correctly set
-	branch, err = result.GetBranch("someunknownbranch")
-	if err == nil {
-		t.Errorf("Branch should not have been found")
-	}
 }
 
 func TestGetGitProjectInvalidUrl(t *testing.T) {
 	_, err := GetGitProject("https://github.com/lysimon/hello-go-serverless-webapp")
-	if err == nil {
+	if err == (jsonapi.ErrorObject{}) {
 		t.Errorf("Expected error with wrong input")
 	}
 	_, err = GetGitProject("aHR0cHM6Ly9yYW5kb21mYWxzZS93aHRldmVydXNlbGVzc3RoaW5nLmdpdA==")
-	if err == nil {
+	if err == (jsonapi.ErrorObject{}) {
 		t.Errorf("Expected error with wrong input")
 	}
 	_, err = GetGitProject("")
-	if err == nil {
+	if err == (jsonapi.ErrorObject{}) {
 		t.Errorf("Expected error with wrong input")
 	}
 	_, err = GetGitProject("  fsd . ds")
-	if err == nil {
+	if err == (jsonapi.ErrorObject{}) {
 		t.Errorf("Expected error with wrong input")
 	}
 }
