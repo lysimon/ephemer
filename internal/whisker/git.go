@@ -37,18 +37,17 @@ type Branch struct {
 func GetGitProjectFromRequest(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	baseUrl := params["id"]
-	_, err := GetGitProject(baseUrl)
+	project, err := GetGitProject(baseUrl)
+	w.Header().Set("Content-Type", "application/json")
 	if err != (jsonapi.ErrorObject{}) {
 		// return json error with status code
 		js, _ := json.Marshal(err)
 		http.Error(w, string(js), http.StatusInternalServerError)
-		return
 	} else {
-
+		js, _ := json.Marshal(project)
+		w.Write(js)
 	}
-	bytes := []byte("toto")
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(bytes)
+	return
 }
 
 func GetGitProject(base64url string) (GitProject, jsonapi.ErrorObject) {
