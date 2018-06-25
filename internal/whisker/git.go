@@ -30,28 +30,7 @@ type Branch struct {
 	CommitId string `json:"commit_id"`
 }
 
-var GitFolder = get_git_folder()
-
-// create git folder used for applications, and remove everything inside
-func get_git_folder() string {
-	folder := os.Getenv("CONFIGURATION_WHISKER_GIT_FOLDER")
-	if folder == "" {
-		// Using default
-		folder = "/tmp/felicette"
-	}
-	if !strings.HasPrefix(folder, "/tmp") {
-		log.Fatalf("Git folder define by env variable CONFIGURATION_WHISKER_GIT_FOLDER should start with /tmp, got: %v", folder)
-	}
-	_, err := exec.Command("rm", "-Rf", folder).Output()
-	if err != nil {
-		log.Fatalf("Unable to delete folder %v: %v", folder, err)
-	}
-	_, err = exec.Command("mkdir", folder).Output()
-	if err != nil {
-		log.Fatalf("Unable to create folder %v: %v", folder, err)
-	}
-	return folder
-}
+var GitFolder = initLocalGitPath()
 
 // json structure returning the current configuration
 func GetGitProjectFromRequest(w http.ResponseWriter, r *http.Request) {
@@ -125,44 +104,32 @@ func GetGitProject(base64url string) (GitProject, jsonapi.ErrorObject) {
 	}, jsonapi.ErrorObject{}
 }
 
-func GetBranch(w http.ResponseWriter, r *http.Request) {
+func GetBranchFromRequest(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	baseUrl := params["base64url"]
 	project, err := GetGitProject(baseUrl)
 	if err != (jsonapi.ErrorObject{}) {
 		// return json error with status code
 		js, _ := json.Marshal(err)
-		http.Error(w, string(js), http.StatusInternalServerError)
+		statusCode, _ := strconv.Atoi(err.Status)
+		http.Error(w, string(js), statusCode)
 		return
 	}
 	// retrieve file from the commitId
 	commitId := params["commitId"]
-	GetFile(project, commitId, "felicette.yml")
+	_, err = GetFile(project, commitId, "felicette.yml")
 	w.Header().Set("Content-Type", "application/json")
 	if err != (jsonapi.ErrorObject{}) {
 		// return json error with status code
 		js, _ := json.Marshal(err)
-		http.Error(w, string(js), http.StatusInternalServerError)
+		statusCode, _ := strconv.Atoi(err.Status)
+		http.Error(w, string(js), statusCode)
 	} else {
 		// retrieve felicette.yml file
 		js, _ := json.Marshal(project)
 		w.Write(js)
 	}
 	return
-}
-
-func getBranch(base64url string, commitId string) (Branch, jsonapi.ErrorObject) {
-	project, err := GetGitProject(base64url)
-	if err != (jsonapi.ErrorObject{}) {
-		return Branch{}, err
-	}
-
-	err = cloneGitRepository(project)
-	if err != (jsonapi.ErrorObject{}) {
-		return Branch{}, err
-	}
-
-	return Branch{}, err
 }
 
 func cloneGitRepository(gitProject GitProject) jsonapi.ErrorObject {
@@ -225,6 +192,19 @@ func GetFile(gitProject GitProject, commitId string, filename string) ([]byte, j
 	return bytes.TrimSpace(output), jsonapi.ErrorObject{}
 }
 
+func initLocalGitPath() string {
+	folder := "/tmp/felicette"
+	_, err := exec.Command("rm", "-Rf", folder).Output()
+	if err != nil {
+		log.Fatalf("Unable to delete folder %v: %v", folder, err)
+	}
+	_, err = exec.Command("mkdir", folder).Output()
+	if err != nil {
+		log.Fatalf("Unable to create folder %v: %v", folder, err)
+	}
+	return folder
+}
+
 func getLocalGitPath(folderName string) string {
-	return GitFolder + "/" + folderName
+	return "/tmp/felicette/" + folderName
 }

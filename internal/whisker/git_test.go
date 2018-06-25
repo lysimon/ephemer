@@ -142,3 +142,54 @@ func TestGetGitProjectFromRequestError(t *testing.T) {
 		t.Errorf("Expected 400")
 	}
 }
+
+func TestGetBranchFromRequestSuccess(t *testing.T) {
+	rr := httptest.NewRecorder()
+	path := fmt.Sprintf("/git/%s/branch/%s", "aHR0cHM6Ly9naXRodWIuY29tL2x5c2ltb24vaGVsbG8tZ28tc2VydmVybGVzcy13ZWJhcHA=", "0ebc05fd263f18d488438ac9b0afe871f8c3b0f1")
+	req, err := http.NewRequest("GET", path, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/git/{base64url}/branch/{commitId}", GetBranchFromRequest)
+	router.ServeHTTP(rr, req)
+
+	if rr.Result().StatusCode != 200 {
+		t.Errorf("Expected 200")
+	}
+}
+
+func TestGetBranchFromRequestWrongGitRepository(t *testing.T) {
+	rr := httptest.NewRecorder()
+	path := fmt.Sprintf("/git/%s/branch/%s", "aHR0cHM6Ly9naXRodWIuY29tL2x5c2ltb24vaGVsbG8tZ28tc2VydmVybGVzcy13ZWJh", "0ebc05fd263f18d488438ac9b0afe871f8c3b0f1")
+	req, err := http.NewRequest("GET", path, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/git/{base64url}/branch/{commitId}", GetBranchFromRequest)
+	router.ServeHTTP(rr, req)
+
+	if rr.Result().StatusCode != 400 {
+		t.Errorf("Expected 400")
+	}
+}
+
+func TestGetBranchFromRequestWrongCommitId(t *testing.T) {
+	rr := httptest.NewRecorder()
+	path := fmt.Sprintf("/git/%s/branch/%s", "aHR0cHM6Ly9naXRodWIuY29tL2x5c2ltb24vaGVsbG8tZ28tc2VydmVybGVzcy13ZWJhcHA=", "0ebc05fd263f18d488438ac9b0afe871f8c3b0f5")
+	req, err := http.NewRequest("GET", path, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/git/{base64url}/branch/{commitId}", GetBranchFromRequest)
+	router.ServeHTTP(rr, req)
+
+	if rr.Result().StatusCode != 400 {
+		t.Errorf("Expected 400, got %s", rr.Result().Status)
+	}
+}
