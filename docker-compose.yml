@@ -31,7 +31,7 @@ services:
   nginx:
     build: vendor/nginx
     ports:
-     - "80:80"
+     - "81:80"
   redis:
     image: "redis:alpine"
     ports:
