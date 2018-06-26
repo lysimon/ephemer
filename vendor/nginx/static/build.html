@@ -36,21 +36,55 @@
                     </div>
                     <div class="body">
                       <h2 class="card-inside-title">Floating Label Examples</h2>
-                      <form onsubmit="alert();return false">
+                      <form onsubmit="return checkGitBranch()">
                         <div class="row clearfix">
                             <div class="col-sm-8">
                                 <div class="form-group form-float">
                                     <div class="form-line">
-                                        <input type="text" class="form-control"  autofocus>
+                                        <input id="git_url" type="text" class="form-control" autofocus>
                                         <label class="form-label">Git repository</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-sm-4">
-                                <button type="submit" class="btn btn-primary waves-effect">VERIFY GIT REPOSITORY</button>
+                                <button id="git_url_button" type="submit" class="btn btn-primary waves-effect">VERIFY GIT REPOSITORY</button>
                             </div>
                         </div>
                       </form>
+                      <script>
+                      <!-- Custom function to go to next steps -->
+                      function checkGitBranch() {
+                        // Get git url
+                          var git_url = $('#git_url').val();
+                          var base64url = btoa(git_url)
+                          // Disable form and set style of button
+                          $("#git_url").prop('disabled', true);
+                          $("#git_url_button").prop('disabled', true);
+                          // Execute http call to whisker
+                          var whisker_url = "whisker/git/"+base64url
+                          alert(whisker_url)
+                          var request = $.get(whisker_url);
+                          // If any error, show it in modal
+                          request.error(function(jqXHR, textStatus, errorThrown) {
+                            if (textStatus == 'timeout')
+                              alert('The server is not responding');
+
+                            if (textStatus == 'error')
+                              alert(errorThrown);
+
+                            // Etc
+                          });
+                          request.success(function(result) {
+                            alert("success");
+                          });
+                          // enable first form again
+                          $("#git_url").prop('disabled', false);
+                          $("#git_url_button").prop('disabled', false);
+                          // Transform git_url to base64
+                          // Get value of
+                          return false;
+                      }
+                      </script>
                   </div>
               </div>
           </div>
