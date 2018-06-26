@@ -77,6 +77,7 @@
                           request.success(function(result) {
                             alert("success");
                           });
+                          $("#errorModal").modal();
                           // enable first form again
                           $("#git_url").prop('disabled', false);
                           $("#git_url_button").prop('disabled', false);
@@ -92,6 +93,6 @@
     </div>
 </section>
 
-
+<!--# include file="menu/modal.html" -->
 <!--# include file="menu/footer.html" -->
 </html>
